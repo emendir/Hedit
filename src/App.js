@@ -73,7 +73,7 @@ import 'ckeditor5/ckeditor5.css';
 import './App.css';
 
 export default function App() {
-	const editorContainerRef = useRef(null);
+  const editorContainerRef = useRef(null);
 	const editorRef = useRef(null);
 	const [isLayoutReady, setIsLayoutReady] = useState(false);
 	const [selectedFile, setSelectedFile] = useState(null);
@@ -84,24 +84,18 @@ export default function App() {
   // const { ipcRenderer } = window.require('electron');  // Use Electron's ipcRenderer
   const selectedFilePathRef = useRef(null); // Create a ref for selectedFilePath
 
-	useEffect(() => {
-		setIsLayoutReady(true);
-
-		return () => setIsLayoutReady(false);
-	}, []);
-
-	// Update selectedFileRef whenever selectedFile changes
-	useEffect(() => {
-	    selectedFileRef.current = selectedFile;
-	    if (selectedFile) {
-        console.log("Selected file state updated:", selectedFile);
-	    }
-	}, [selectedFile]);
   useEffect(() => {
-    selectedFilePathRef.current = selectedFilePath;
-    console.log("Selected file state updated:", selectedFilePathRef);
-}, [selectedFilePath]);
+      setIsLayoutReady(true);
 
+      // Listen for the opened file content
+      window.electron.onFileOpened((content) => {
+          if (editorRef.current) {
+              editorRef.current.setData(content); // Set editor content with file content
+          }
+      });
+
+      return () => setIsLayoutReady(false);
+  }, []);
 	const editorConfig = {
 		toolbar: {
 			items: [
@@ -373,87 +367,19 @@ export default function App() {
 			contentToolbar: ['tableColumn', 'tableRow', 'mergeTableCells', 'tableProperties', 'tableCellProperties']
     },
     autosave: {
-    save( editor ) {
-        return saveData( editor.getData() );
-    }
+      save(editor) {
+          const data = editor.getData();
+          console.log("Autosaved data:", data);
+          setAutosavedData(data); // Update autosaved data state
+          window.electron.saveFile(data); // Send data to save in main.js
+          return Promise.resolve(); // Return a resolved promise
+      }
 },
 	};
-  // Function to open file dialog and set the selected file path
-  // Function to open file dialog, get path, and load file content into CKEditor
-  const selectFile = async () => {
-      const filePath = await window.electron.openFileDialog();
-
-      console.log("File path selected:", filePath); // Log selected file path
-      if (filePath) {
-          setSelectedFilePath(filePath); // Update selectedFilePath state
-          const fileContent = await window.electron.readFile(filePath);
-          console.log("Set selected filePath:", selectedFilePath);  // Check if selectedFileRef is up-to-date
-
-          // Log file content for debugging
-          console.log("File content read:", fileContent);
-
-          if (editorRef.current) {
-              editorRef.current.setData(fileContent); // Set CKEditor content to file data
-          }
-      } else {
-          console.warn("No file was selected.");
-      }
-  };
-	    function saveData(data) {
-        //console.log("Autosaving data:", data); // Log the editor content
-        console.log("Saving data to:", selectedFilePathRef.current);  // Check if selectedFileRef is up-to-date
-        const file = selectedFilePathRef.current;
-        console.log("Current selectedFile in saveData:", file);  // Check if selectedFileRef is up-to-date
-
-	        setAutosavedData(data); // Update autosaved data state
-
-	        if (file) {
-            console.log("Writing to file:", file); // Log the file path
-            if (!window.electron){
-              console.log("Electron not available!");
-              return Promise.resolve(); // Return a resolved promise
-            }
-              // Use the saveFile method from the preload script
-              window.electron.saveFile(file, data);
-              window.electron.onSaveResponse((event, response) => {
-                  if (response.success) console.log("File saved successfully.");
-                  else console.error("Failed to save file:", response.error);
-              });
-	            console.log("Autosave completed, data written to file.");
-	        } else {
-	            console.warn("No file selected for saving.");
-	        }
-
-	        return Promise.resolve(); // Return a resolved promise
-	    }
-
-	    const handleFileChange = (event) => {
-	        const file = event.target.files[0];
-	        if (file) {
-	            console.log("File selected:", file);
-              setSelectedFile(file.path); // Update selected file state
-
-	            // Read the file content
-	            const reader = new FileReader();
-	            reader.onload = (e) => {
-	                const content = e.target.result; // Get file content
-	                console.log("File content read:", content); // Log the content
-
-	                // Use the editor instance ref to set the editor's content
-	                if (editorInstanceRef.current) {
-	                    editorInstanceRef.current.setData(content)
-	                }
-	            };
-	            reader.readAsText(file); // Read file as text
-	        } else {
-	            console.warn("No file selected.");
-	        }
-	    };
 
 	    return (
 	        <div>
 	            <div className="main-container">
-	                <button onClick={selectFile}>Choose File</button>
 
 	                <div className="editor-container editor-container_classic-editor editor-container_include-style" ref={editorContainerRef}>
 	                    <div className="editor-container__editor">
