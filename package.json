@@ -18,13 +18,13 @@
     "eject": "react-scripts eject",
     "electron": "electron .",
     "dist": "electron-builder",
-    "main": "electron.js",
-    "build": {
-      "appId": "com.example.myapp",
-      "productName": "My Electron App",
-      "directories": {
-        "output": "dist"
-      }
+    "build": "react-scripts build"
+  },
+  "build": {
+    "appId": "com.example.myapp",
+    "productName": "My Electron App",
+    "directories": {
+      "output": "dist"
     }
   },
   "eslintConfig": {
