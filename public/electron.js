@@ -15,7 +15,8 @@ function createWindow() {
         },
     });
 
-    mainWindow.loadURL('http://localhost:3000'); // or load your index.html
+    // mainWindow.loadURL('http://localhost:3000'); // or load your index.html
+    mainWindow.loadFile(path.join(__dirname, '..','build', 'index.html'));
 }
 
 // Function to create a menu with "Choose File" added to the default File menu
