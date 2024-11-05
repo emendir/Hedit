@@ -1,5 +1,11 @@
 {
   "name": "hedit",
+  "description": "An HTML WYSIWYG editor for desktop",
+  "keywords": [
+    "HTML",
+    "WYSIWYG"
+  ],
+  "author": "emendir",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -11,21 +17,36 @@
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
   },
-  "main": "electron.js",
+  "main": "public/electron.js",
   "scripts": {
     "start": "react-scripts start",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "electron": "electron .",
-    "dist": "electron-builder",
-    "build": "react-scripts build"
+    "dev": "concurrently \"BROWSER=none npm start\" \"wait-on http://localhost:3000 && electron .\"",
+    "build": "react-scripts build",
+    "dist": "npm run build && electron-builder",
+    "electron-pack": "npm run build && electron ."
   },
   "build": {
-    "appId": "com.example.myapp",
-    "productName": "My Electron App",
-    "directories": {
-      "output": "dist"
+    "appId": "com.emendir.hedit",
+    "productName": "Hedit",
+    "files": [
+    "build/**/*",
+    "package.json",
+    "public/**/*",
+    "src/**/*"
+  ],
+    "linux": {
+      "category": "Development"
     }
+  },
+  "devDependencies": {
+    "@ckeditor/ckeditor5-build-classic": "^43.3.0",
+    "@ckeditor/ckeditor5-react": "^9.3.1",
+    "electron": "^33.0.2",
+    "electron-builder": "^25.1.8",
+    "electron-is-dev": "^3.0.1"
   },
   "eslintConfig": {
     "extends": [
@@ -44,12 +65,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "@ckeditor/ckeditor5-build-classic": "^43.3.0",
-    "@ckeditor/ckeditor5-react": "^9.3.1",
-    "electron": "^33.0.2",
-    "electron-builder": "^25.1.8",
-    "electron-is-dev": "^3.0.1"
   }
 }
