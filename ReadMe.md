@@ -11,11 +11,12 @@ It bundles [ckeditor5](https://github.com/ckeditor/ckeditor5), the javascript li
 
 Head over to the [releases tab on Github](https://github.com/emendir/Hedit) to download the AppImage.
 Make sure the file is marked as executable in its permissions, and run it.
-Run from the terminal to troubleshoot any issues.
-For Ubuntu-24 users, here are some useful links:
-
+Run from the terminal to troubleshoot any issues, and checkout these links:
 - https://linuxconfig.org/ubuntu-24-04-how-to-install-appimage
-  You can install AppImages with a tool like [Gearlever](https://github.com/mijorus/gearlever)
+- https://docs.appimage.org/user-guide/troubleshooting/index.html
+- https://github.com/gm-vm/openfortivpn-webview/issues/37#issuecomment-2394530200
+
+You can install AppImages with a tool like [Gearlever](https://github.com/mijorus/gearlever)
 
 ### Other
 
@@ -33,7 +34,12 @@ I don't have any prebuilt binaries for other OSs yet, so you'll have to build th
 From the project's root directory, run the following command:
 
 ```sh
-npm run dist
+# download project
+git clone https://github.com/emendir/Hedit
+cd Hedit
+
+npm install     # download npm dependency packages
+npm run dist    # compile project into binaries
 ```
 
 The compiled binary will be written to `/dist`.
