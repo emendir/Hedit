@@ -5,18 +5,10 @@
     "HTML",
     "WYSIWYG"
   ],
+  "homepage": "./",
   "author": "emendir",
   "version": "0.1.0",
   "private": true,
-  "dependencies": {
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
-  },
   "main": "public/electron.js",
   "scripts": {
     "start": "react-scripts start",
@@ -32,21 +24,35 @@
     "appId": "com.emendir.hedit",
     "productName": "Hedit",
     "files": [
-    "build/**/*",
-    "package.json",
-    "public/**/*",
-    "src/**/*"
-  ],
+      "build/**/*",
+      "package.json",
+      "public/**/*",
+      "src/**/*"
+    ],
     "linux": {
-      "category": "Development"
+      "category": "Development",
+      "icon": "public/hedit-icon.svg"
     }
   },
-  "devDependencies": {
+  "dependencies": {
     "@ckeditor/ckeditor5-build-classic": "^43.3.0",
     "@ckeditor/ckeditor5-react": "^9.3.1",
-    "electron": "^33.0.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "web-vitals": "^4.2.4"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "@babel/preset-react": "^7.25.9",
+    "babel-loader": "^9.2.1",
+    "electron": "^33.1.0",
     "electron-builder": "^25.1.8",
-    "electron-is-dev": "^3.0.1"
+    "electron-is-dev": "^3.0.1",
+    "react-scripts": "^5.0.1",
+    "webpack": "^5.96.1",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.1.0"
   },
   "eslintConfig": {
     "extends": [
