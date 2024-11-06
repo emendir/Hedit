@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 let currentFilePath = '';
+let editorContent = '';
 
 function createWindow() {
     const mainWindow = new BrowserWindow({
@@ -29,14 +30,52 @@ function createMenu() {
             label: 'File',
             submenu: [
                 {
+                    label: 'New',
+                    accelerator: process.platform === 'darwin' ? 'Cmd+N' : 'Ctrl+N',
+                    click: async () => {
+                        await createNewFile();
+                    },
+                },
+                {
                     label: 'Open...',
+                    accelerator: process.platform === 'darwin' ? 'Cmd+O' : 'Ctrl+O',
                     click: async () => {
                         const filePath = await showOpenDialog();
                         if (filePath) {
-                            currentFilePath = filePath; // Store the file path
-                            const fileContent = await readFile(filePath); // Read the file content
-                            // Send the content to App.js
-                            BrowserWindow.getFocusedWindow().webContents.send('file-opened', fileContent);
+                            await loadFile(filePath);
+                        }
+                    },
+                },
+                {
+                    label: 'Save',
+                    accelerator: process.platform === 'darwin' ? 'Cmd+S' : 'Ctrl+S',
+                    click: async () => {
+                        if (!currentFilePath) {
+                            const result = await dialog.showSaveDialog({
+                                title: 'Save File',
+                                filters: [{ name: 'Text Files', extensions: ['txt', 'html'] }]
+                            });
+                            
+                            if (!result.canceled && result.filePath) {
+                                // Check if file exists
+                                if (fs.existsSync(result.filePath)) {
+                                    const choice = await dialog.showMessageBox({
+                                        type: 'question',
+                                        buttons: ['Overwrite', 'Cancel'],
+                                        defaultId: 1,
+                                        title: 'File Already Exists',
+                                        message: 'The file already exists. Do you want to overwrite it?'
+                                    });
+                                    if (choice.response === 1) { // User clicked Cancel
+                                        currentFilePath='';
+                                        return;
+                                    }
+                                }
+                                currentFilePath = result.filePath;
+                                await saveContentToFile();
+                            }
+                        } else {
+                            await saveContentToFile();
                         }
                     },
                 },
@@ -73,20 +112,95 @@ async function readFile(filePath) {
     });
 }
 
-// IPC handler to save the file
-ipcMain.on('save-file', (event, data) => {
+async function saveContentToFile() {
     if (currentFilePath) {
-        fs.writeFile(currentFilePath, data, (err) => {
-            if (err) {
-                console.error('Failed to save file:', err);
-            } else {
-                console.log('File saved successfully');
-            }
-        });
+        try {
+            await fs.promises.writeFile(currentFilePath, editorContent);
+            console.log('File saved successfully');
+        } catch (err) {
+            console.error('Failed to save file:', err);
+        }
     } else {
         console.warn('No file path specified for saving.');
     }
+}
+
+// IPC handler to save the file
+ipcMain.on('save-file', (event, data) => {
+    editorContent=data;
+    saveContentToFile();
 });
+
+// Add this new function
+async function loadFile(filePath) {
+    const fileContent = await readFile(filePath);
+    
+    if (!fileContent) {
+        currentFilePath = filePath;
+        // If file is empty, write the current editor content to it
+        if (editorContent) {
+            await fs.promises.writeFile(filePath, editorContent);
+            BrowserWindow.getFocusedWindow().webContents.send('file-opened', editorContent);
+        }
+    } else if (!editorContent) {
+        // If editor is empty, load the file content
+        currentFilePath = filePath;
+        editorContent=fileContent;
+        BrowserWindow.getFocusedWindow().webContents.send('file-opened', fileContent);
+    } else if (editorContent !== fileContent) {
+        if (!currentFilePath){
+
+            // If both have different content, ask user what to do
+            const choice = await dialog.showMessageBox({
+                type: 'question',
+                buttons: ['Load File', 'Cancel'],
+                defaultId: 0,
+                title: 'Unsaved Changes',
+                message: 'You have unsaved changes in the editor. Do you want to discard them and load the file?'
+            });
+            if (choice.response === 0) {  // User clicked "Load File"
+                currentFilePath = filePath;
+                editorContent=fileContent;
+                BrowserWindow.getFocusedWindow().webContents.send('file-opened', fileContent);
+            }
+            // If user clicked Cancel, do nothing
+        } else {
+            saveContentToFile();
+            editorContent=fileContent;
+            currentFilePath = filePath;
+            BrowserWindow.getFocusedWindow().webContents.send('file-opened', fileContent);
+        }
+    } else {
+        // Contents are the same, just load the file
+        currentFilePath = filePath;
+        BrowserWindow.getFocusedWindow().webContents.send('file-opened', fileContent);
+    }
+}
+
+async function createNewFile() {
+    const result = await dialog.showSaveDialog({
+        title: 'Create New File',
+        filters: [{ name: 'Text Files', extensions: ['txt', 'html'] }]
+    });
+    
+    if (!result.canceled && result.filePath) {
+        // Check if file exists
+        if (fs.existsSync(result.filePath)) {
+            const choice = await dialog.showMessageBox({
+                type: 'question',
+                buttons: ['Overwrite', 'Cancel'],
+                defaultId: 1,
+                title: 'File Already Exists',
+                message: 'The file already exists. Do you want to overwrite it?'
+            });
+            if (choice.response === 1) { // User clicked Cancel
+                return;
+            }
+        }
+        await fs.promises.writeFile(result.filePath, '');
+        await loadFile(result.filePath);
+    }
+}
 
 app.whenReady().then(() => {
     createMenu(); // Set up the menu when app is ready
